@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Guia Prático GD&amp;T",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "GD&amp;T Guia",
+  "start_url": "https://gustavodcampos.github.io/app-gdt/",
+  "theme_color": "#2563eb",
+  "lang": "pt",
+  "prefer_related_applications": true
+}
