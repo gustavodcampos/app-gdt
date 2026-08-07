@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Guia Prático GD&T</title>
+    <!-- Configuração para PWA / Instalação no telemóvel -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GD&T Guia">
+    
+    <!-- Manifesto embutido para transformar a página num App instalável -->
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Guia Prático GD&T","short_name":"GD&T","start_url":".","display":"standalone","background_color":"#f8fafc","theme_color":"#2563eb","icons":[{"src":"https://placehold.co/192x192/2563eb/ffffff?text=GD%26T","sizes":"192x192","type":"image/png"},{"src":"https://placehold.co/512x512/2563eb/ffffff?text=GD%26T","sizes":"512x512","type":"image/png"}]}'>
+
+    <!-- Carregamento do Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .symbol-font { 
+            font-family: 'Segoe UI Symbol', 'Arial Unicode MS', sans-serif; 
+        }
+        
+        .modal-enter { 
+            animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .backdrop-blur-custom {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4 sm:p-8 select-none">
+
+    <div class="max-w-6xl mx-auto pb-12">
+        <header class="mb-8 text-center flex flex-col items-center pt-2">
+            <div class="bg-blue-600 text-white p-3.5 rounded-2xl mb-3 shadow-lg shadow-blue-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                    <line x1="15" y1="3" x2="15" y2="21"></line>
+                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                </svg>
+            </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-2 tracking-tight">
+                Guia <span class="text-blue-600">GD&T</span>
+            </h1>
+            <p class="text-slate-500 max-w-md text-xs sm:text-sm font-medium px-4">
+                Toque em qualquer símbolo geométrico para consultar definições técnicas, exemplos industriais e conversar com o especialista de IA.
+            </p>
+        </header>
+
+        <main>
+            <!-- Grelha de Símbolos -->
+            <div id="symbol-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3.5 sm:gap-6">
+                <!-- Inserido dinamicamente -->
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-custom hidden z-40 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+        <div id="modal-content" class="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden hidden z-50 flex flex-col max-h-[90vh] sm:max-h-[92vh] relative">
+            
+            <!-- Barra superior móvel / Botão Fechar -->
+            <div class="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full p-2.5 transition-colors" aria-label="Fechar">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="bg-gradient-to-b from-blue-50/80 to-white pt-8 pb-5 px-6 border-b border-slate-100 flex flex-col items-center">
+                <div id="modal-symbol" class="symbol-font text-6xl sm:text-7xl text-blue-600 bg-white shadow-sm border border-blue-100 w-24 h-24 sm:w-28 sm:h-28 rounded-2xl flex items-center justify-center mb-3">
+                    ⏤
+                </div>
+                <h2 id="modal-title" class="text-xl sm:text-2xl font-extrabold text-slate-800 text-center">
+                    Título
+                </h2>
+                <div id="modal-category" class="mt-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
+                    Categoria
+                </div>
+            </div>
+            
+            <!-- Corpo rolável do Modal -->
+            <div class="p-5 sm:p-6 overflow-y-auto flex-grow flex flex-col gap-5">
+                <div>
+                    <h3 class="text-xs uppercase tracking-wider font-bold text-slate-400 mb-1.5 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Definição Técnica
+                    </h3>
+                    <p id="modal-desc" class="text-slate-700 leading-relaxed text-sm sm:text-base">
+                        Descrição...
+                    </p>
+                </div>
+                
+                <div class="bg-amber-50/70 border border-amber-200/60 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    <h3 class="text-xs uppercase tracking-wider font-bold text-amber-600 mb-1.5 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+                        </svg>
+                        Uso Real na Indústria
+                    </h3>
+                    <p id="modal-uso" class="text-amber-900 text-sm sm:text-base font-medium leading-relaxed">
+                        Uso...
+                    </p>
+                </div>
+
+                <!-- Seção do Assistente de IA -->
+                <div class="bg-indigo-50/60 border border-indigo-200/60 rounded-2xl p-4 sm:p-5 shadow-sm">
+                    <h3 class="text-xs uppercase tracking-wider font-bold text-indigo-600 mb-1 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        Especialista Virtual (Gemini AI)
+                    </h3>
+                    <p class="text-[11px] text-indigo-500 mb-3 font-medium">Tem alguma dúvida técnica ou sobre medição? Pergunte!</p>
+                    
+                    <div class="flex gap-2">
+                        <input type="text" id="ai-input" class="flex-1 rounded-xl border border-indigo-200 shadow-inner focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 text-sm p-3 outline-none transition-all bg-white" placeholder="Ex: Como inspecionar isto?">
+                        <button id="ai-submit-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl transition-colors flex items-center justify-center min-w-[48px] shadow-sm shadow-indigo-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div id="ai-response-container" class="mt-3 hidden">
+                        <div id="ai-loading" class="hidden flex items-center gap-2 text-indigo-600 text-xs font-semibold py-2">
+                            <svg class="animate-spin h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            O especialista está a consultar dados...
+                        </div>
+                        <div id="ai-response-text" class="text-indigo-950 text-xs sm:text-sm leading-relaxed bg-white p-3.5 rounded-xl border border-indigo-100 shadow-sm hidden">
+                            <!-- Resposta injetada -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 p-4 border-t border-slate-100">
+                <button id="close-modal-footer-btn" class="w-full py-3 bg-slate-800 hover:bg-slate-900 active:scale-[0.99] text-white rounded-xl font-semibold transition-all shadow-sm">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gdtData = [
+            { id: 'retitude', nome: 'Retitude', simbolo: '⏤', categoria: 'Forma', desc: 'Define que todos os pontos de uma linha em uma superfície ou eixo devem estar perfeitamente alinhados, sem desvios além da zona de tolerância estabelecida.', uso: 'Garantir que um pino ou eixo longo não fique curvado durante a fabricação, permitindo que ele se encaixe num furo com precisão sem travar ou raspar.' },
+            { id: 'planeza', nome: 'Planeza', simbolo: '⏥', categoria: 'Forma', desc: 'Controla a condição em que todos os elementos de uma superfície devem estar num único plano ideal tridimensional, sem apresentar ondulações, empenamentos ou irregularidades fora do limite.', uso: 'Usinagem do bloco de um motor (cabeçote). A superfície precisa ser extremamente plana para que a junta metálica vede corretamente, evitando vazamentos de óleo ou água.' },
+            { id: 'circularidade', nome: 'Circularidade', simbolo: '◯', categoria: 'Forma', desc: 'Especifica o quão perfeitamente redondo deve ser um elemento cilíndrico ou cônico em qualquer secção transversal individual ao longo do seu comprimento.', uso: 'Inspeção de esferas de rolamentos ou secções de um eixo para garantir uma rotação suave e contínua, sem ressaltos que causem atrito excessivo.' },
+            { id: 'cilindricidade', nome: 'Cilindricidade', simbolo: '⌭', categoria: 'Forma', desc: 'Combina circularidade, retitude e conicidade. Exige que todos os pontos da superfície de um cilindro estejam compreendidos entre dois cilindros coaxiais ideais.', uso: 'Fabricação de pistões e camisas de cilindros automotivos, garantindo que o conjunto tenha vedação e compressão perfeitas ao longo de todo o curso.' },
+            { id: 'perfil_linha', nome: 'Perfil de uma Linha', simbolo: '⌒', categoria: 'Perfil', desc: 'Controla a forma exata de uma curva bidimensional específica na superfície da peça, garantindo que não se afaste do perfil ideal projetado (CAD).', uso: 'Controlo aerodinâmico rigoroso do perfil de ataque de uma única nervura específica na asa de um avião.' },
+            { id: 'perfil_superficie', nome: 'Perfil de Superfície', simbolo: '⌓', categoria: 'Perfil', desc: 'Controla a forma tridimensional complexa de uma superfície inteira simultaneamente, garantindo que ela acompanhe fielmente a geometria nominal do projeto.', uso: 'Estamparia de componentes de carroçaria (portas, capôs). Garante que o design estético curvo encaixe perfeitamente no chassi sem frestas indesejadas.' },
+            { id: 'perpendicularidade', nome: 'Perpendicularidade', simbolo: '⟂', categoria: 'Orientação', desc: 'Exige que um elemento, superfície ou eixo se encontre num ângulo exato de 90 graus em relação a uma base, eixo ou plano de referência (Datum).', uso: 'Garantir que a coluna de suporte vertical de uma máquina-ferramenta CNC seja perfeitamente reta em relação à base horizontal de nivelamento.' },
+            { id: 'paralelismo', nome: 'Paralelismo', simbolo: '∥', categoria: 'Orientação', desc: 'Define que uma superfície ou eixo deve manter rigorosamente a mesma distância ao longo de toda a sua extensão, em relação a um plano ou eixo de referência.', uso: 'Carris de guia mecânica ou trilhos de empilhadoras industriais. Se os trilhos não forem estritamente paralelos, o equipamento prenderá e falhará.' },
+            { id: 'angularidade', nome: 'Angularidade', simbolo: '∠', categoria: 'Orientação', desc: 'Controla a orientação angular precisa de uma superfície ou eixo (num ângulo diferente de 90°) em relação a um plano ou eixo de referência primário.', uso: 'Usinagem de encostos cónicos para engrenagens helicoidais ou suportes inclinados para matrizes de perfuração.' },
+            { id: 'posicao', nome: 'Posição Real', simbolo: '⌖', categoria: 'Localização', desc: 'A tolerância geométrica mais comum. Controla a variação permitida para a localização exata do centro de uma feição (como furos ou ranhuras) face à posição teórica perfeita.', uso: 'O padrão de parafusos do cubo da roda de um carro. Os 4 ou 5 furos precisam estar na posição central exata, ou a roda e os parafusos não encaixarão.' },
+            { id: 'concentricidade', nome: 'Concentricidade', simbolo: '◎', categoria: 'Localização', desc: 'Controla o centro medido de feições rotativas para garantir que o eixo médio da peça coincida com o eixo de referência, limitando o desvio diametral.', uso: 'Balanceamento de eixos de transmissão de longo alcance ou rotores de turbinas para evitar vibrações destrutivas em altas rotações.' },
+            { id: 'batimento', nome: 'Batimento Circular', simbolo: '↗', categoria: 'Batimento', desc: 'Controla a oscilação superficial de uma peça de revolução enquanto esta é girada 360 graus sobre o seu eixo, fixada em pontos de referência.', uso: 'Verificação de discos de travão (freio) de automóveis. Uma oscilação fora dos limites causaria forte trepidação no pedal do condutor ao travar.' }
+        ];
+
+        const gridElement = document.getElementById('symbol-grid');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const modalContent = document.getElementById('modal-content');
+        
+        const modalTitle = document.getElementById('modal-title');
+        const modalSymbol = document.getElementById('modal-symbol');
+        const modalCategory = document.getElementById('modal-category');
+        const modalDesc = document.getElementById('modal-desc');
+        const modalUso = document.getElementById('modal-uso');
+
+        const aiInput = document.getElementById('ai-input');
+        const aiSubmitBtn = document.getElementById('ai-submit-btn');
+        const aiResponseContainer = document.getElementById('ai-response-container');
+        const aiLoading = document.getElementById('ai-loading');
+        const aiResponseText = document.getElementById('ai-response-text');
+        let currentActiveSymbol = null;
+
+        function renderCards() {
+            gdtData.forEach(item => {
+                const card = document.createElement('button');
+                card.className = 'bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-5 flex flex-col items-center justify-center cursor-pointer active:scale-95 hover:shadow-md hover:border-blue-400 transition-all duration-200 group focus:outline-none';
+                card.setAttribute('aria-label', `Ver detalhes de ${item.nome}`);
+                
+                card.innerHTML = `
+                    <div class="symbol-font text-5xl sm:text-6xl text-slate-700 group-hover:text-blue-600 mb-2 transition-colors">
+                        ${item.simbolo}
+                    </div>
+                    <h3 class="text-xs sm:text-sm font-bold text-center text-slate-700 group-hover:text-blue-800 leading-tight">
+                        ${item.nome}
+                    </h3>
+                    <span class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">${item.categoria}</span>
+                `;
+                
+                card.addEventListener('click', () => openModal(item));
+                gridElement.appendChild(card);
+            });
+        }
+
+        function openModal(itemData) {
+            currentActiveSymbol = itemData; 
+            modalTitle.textContent = itemData.nome;
+            modalSymbol.textContent = itemData.simbolo;
+            modalCategory.textContent = itemData.categoria;
+            modalDesc.textContent = itemData.desc;
+            modalUso.textContent = itemData.uso;
+            
+            modalBackdrop.classList.remove('hidden');
+            modalContent.classList.remove('hidden');
+            modalContent.classList.add('modal-enter');
+            document.body.style.overflow = 'hidden';
+            
+            aiInput.value = '';
+            aiResponseContainer.classList.add('hidden');
+            aiResponseText.innerHTML = '';
+        }
+
+        function closeModal() {
+            modalBackdrop.classList.add('hidden');
+            modalContent.classList.add('hidden');
+            modalContent.classList.remove('modal-enter');
+            document.body.style.overflow = 'auto';
+        }
+
+        document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+        document.getElementById('close-modal-footer-btn').addEventListener('click', closeModal);
+        
+        modalBackdrop.addEventListener('click', (e) => {
+            if (e.target === modalBackdrop) closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modalBackdrop.classList.contains('hidden')) closeModal();
+        });
+
+        async function handleAIQuestion() {
+            const question = aiInput.value.trim();
+            if (!question || !currentActiveSymbol) return;
+
+            aiResponseContainer.classList.remove('hidden');
+            aiLoading.classList.remove('hidden');
+            aiResponseText.classList.add('hidden');
+            aiSubmitBtn.disabled = true;
+            aiSubmitBtn.classList.add('opacity-50');
+
+            try {
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                
+                const systemPrompt = "Você é um engenheiro mecânico sênior especialista em GD&T. Responda à dúvida do usuário de forma clara, direta, em português, e em apenas um parágrafo conciso.";
+                const userPrompt = `Contexto: Símbolo GD&T "${currentActiveSymbol.nome}" (${currentActiveSymbol.simbolo}).\nPergunta: ${question}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userPrompt }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('Erro de conexão');
+
+                const result = await response.json();
+                let respostaTexto = "Desculpe, não foi possível gerar uma resposta agora.";
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    respostaTexto = result.candidates[0].content.parts[0].text;
+                }
+
+                respostaTexto = respostaTexto.replace(/\*\*/g, '').replace(/\*/g, '');
+                aiResponseText.textContent = respostaTexto;
+                
+            } catch (error) {
+                aiResponseText.textContent = "Erro de comunicação com o assistente. Verifique a conexão.";
+            } finally {
+                aiLoading.classList.add('hidden');
+                aiResponseText.classList.remove('hidden');
+                aiSubmitBtn.disabled = false;
+                aiSubmitBtn.classList.remove('opacity-50');
+            }
+        }
+
+        aiSubmitBtn.addEventListener('click', handleAIQuestion);
+        aiInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleAIQuestion();
+        });
+
+        renderCards();
+    </script>
+</body>
+</html>
