@@ -10,10 +10,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="GD&T Guia">
     
-    <!-- Manifesto embutido para transformar a página num App instalável -->
+    <!-- Manifesto embutido -->
     <link rel="manifest" href='data:application/manifest+json,{"name":"Guia Prático GD&T","short_name":"GD&T","start_url":".","display":"standalone","background_color":"#f8fafc","theme_color":"#2563eb","icons":[{"src":"https://placehold.co/192x192/2563eb/ffffff?text=GD%26T","sizes":"192x192","type":"image/png"},{"src":"https://placehold.co/512x512/2563eb/ffffff?text=GD%26T","sizes":"512x512","type":"image/png"}]}'>
 
-    <!-- Carregamento do Tailwind CSS -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -45,7 +45,16 @@
 <body class="bg-slate-100 text-slate-800 min-h-screen p-4 sm:p-8 select-none">
 
     <div class="max-w-6xl mx-auto pb-12">
-        <header class="mb-8 text-center flex flex-col items-center pt-2">
+        <header class="mb-8 text-center flex flex-col items-center pt-2 relative">
+            <div id="install-container" class="absolute top-0 right-0 hidden">
+                <button id="install-btn" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition-all active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Instalar App
+                </button>
+            </div>
+
             <div class="bg-blue-600 text-white p-3.5 rounded-2xl mb-3 shadow-lg shadow-blue-200">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -64,17 +73,16 @@
         </header>
 
         <main>
-            <!-- Grelha de Símbolos -->
             <div id="symbol-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3.5 sm:gap-6">
-                <!-- Inserido dinamicamente -->
+                <!-- Símbolos injetados por JavaScript -->
             </div>
         </main>
     </div>
 
+    <!-- Modal de Detalhes -->
     <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-custom hidden z-40 flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
         <div id="modal-content" class="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden hidden z-50 flex flex-col max-h-[90vh] sm:max-h-[92vh] relative">
             
-            <!-- Barra superior móvel / Botão Fechar -->
             <div class="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
                 <button id="close-modal-btn" class="text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full p-2.5 transition-colors" aria-label="Fechar">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -95,7 +103,6 @@
                 </div>
             </div>
             
-            <!-- Corpo rolável do Modal -->
             <div class="p-5 sm:p-6 overflow-y-auto flex-grow flex flex-col gap-5">
                 <div>
                     <h3 class="text-xs uppercase tracking-wider font-bold text-slate-400 mb-1.5 flex items-center gap-2">
@@ -121,7 +128,7 @@
                     </p>
                 </div>
 
-                <!-- Seção do Assistente de IA -->
+                <!-- Assistente de IA -->
                 <div class="bg-indigo-50/60 border border-indigo-200/60 rounded-2xl p-4 sm:p-5 shadow-sm">
                     <h3 class="text-xs uppercase tracking-wider font-bold text-indigo-600 mb-1 flex items-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -149,7 +156,7 @@
                             O especialista está a consultar dados...
                         </div>
                         <div id="ai-response-text" class="text-indigo-950 text-xs sm:text-sm leading-relaxed bg-white p-3.5 rounded-xl border border-indigo-100 shadow-sm hidden">
-                            <!-- Resposta injetada -->
+                            <!-- Resposta gerada pela IA -->
                         </div>
                     </div>
                 </div>
@@ -164,6 +171,40 @@
     </div>
 
     <script>
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', (e) => { self.skipWaiting(); });
+                self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); });
+                self.addEventListener('fetch', (e) => {
+                    e.respondWith(
+                        caches.match(e.request).then((response) => response || fetch(e.request).catch(() => caches.match('./')))
+                    );
+                });
+            `;
+            const blob = new Blob([swCode], { type: 'text/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(err => console.log('SW error:', err));
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installContainer = document.getElementById('install-container');
+            if (installContainer) installContainer.classList.remove('hidden');
+        });
+
+        document.getElementById('install-btn')?.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    document.getElementById('install-container').classList.add('hidden');
+                }
+                deferredPrompt = null;
+            }
+        });
+
         const gdtData = [
             { id: 'retitude', nome: 'Retitude', simbolo: '⏤', categoria: 'Forma', desc: 'Define que todos os pontos de uma linha em uma superfície ou eixo devem estar perfeitamente alinhados, sem desvios além da zona de tolerância estabelecida.', uso: 'Garantir que um pino ou eixo longo não fique curvado durante a fabricação, permitindo que ele se encaixe num furo com precisão sem travar ou raspar.' },
             { id: 'planeza', nome: 'Planeza', simbolo: '⏥', categoria: 'Forma', desc: 'Controla a condição em que todos os elementos de uma superfície devem estar num único plano ideal tridimensional, sem apresentar ondulações, empenamentos ou irregularidades fora do limite.', uso: 'Usinagem do bloco de um motor (cabeçote). A superfície precisa ser extremamente plana para que a junta metálica vede corretamente, evitando vazamentos de óleo ou água.' },
@@ -264,7 +305,8 @@
             aiSubmitBtn.classList.add('opacity-50');
 
             try {
-                const apiKey = "";
+                // Insira a sua chave API do Gemini no campo abaixo:
+                const apiKey = "SUA_CHAVE_API_GEMINI_AQUI";
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
                 
                 const systemPrompt = "Você é um engenheiro mecânico sênior especialista em GD&T. Responda à dúvida do usuário de forma clara, direta, em português, e em apenas um parágrafo conciso.";
@@ -293,7 +335,7 @@
                 aiResponseText.textContent = respostaTexto;
                 
             } catch (error) {
-                aiResponseText.textContent = "Erro de comunicação com o assistente. Verifique a conexão.";
+                aiResponseText.textContent = "Erro de comunicação com o assistente. Verifique a conexão ou a chave de API.";
             } finally {
                 aiLoading.classList.add('hidden');
                 aiResponseText.classList.remove('hidden');
